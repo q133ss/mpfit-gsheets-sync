@@ -73,11 +73,13 @@ class SyncMpfitToGoogleSheets extends Command
     protected function processStocks(GoogleSheetsService $sheets, array $stocks)
     {
         try {
-            $headers = [['ID товара', 'ID компании', 'Склад ID', 'Доступно', 'Можно собрать']];
+            $headers = [['Parse DateTime', 'product_id', 'company_id', 'warehouse_id', 'free', 'can_collect']];
             $rows = [];
 
             foreach ($stocks as $stock) {
+                $currentDateTime = now()->format('Y-m-d H:i:s');
                 $rows[] = [
+                    $currentDateTime,
                     $stock['product_id'] ?? '',
                     $stock['company_id'] ?? '',
                     $stock['warehouse_id'] ?? '',
@@ -101,17 +103,20 @@ class SyncMpfitToGoogleSheets extends Command
         try {
             $headers = [
                 [
-                    'ID приемки', 'Склад', 'Статус', 'Дата',
-                    'Принято', 'Дата создания', 'Дата обновления',
-                    'ID товара', 'Артикул', 'Название',
-                    'Кол-во', 'Факт кол-во', 'ID позиции'
+                    'Parse DateTime',
+                    'arrival_id', 'to_warehouse_id', 'status', 'date',
+                    'accepted_at', 'created_at', 'updated_at',
+                    'product_id', 'article', 'product_name',
+                    'quantity', 'fact_quantity', 'item_id'
                 ]
             ];
 
             $rows = [];
 
             foreach ($arrivals as $arrival) {
+                $currentDateTime = now()->format('Y-m-d H:i:s');
                 $rows[] = [
+                    $currentDateTime,
                     $arrival['arrival_id'],
                     $arrival['to_warehouse_id'],
                     $arrival['status'],
@@ -163,11 +168,13 @@ class SyncMpfitToGoogleSheets extends Command
     protected function processProducts(GoogleSheetsService $sheets, array $products)
     {
         try {
-            $headers = [['ID', 'Артикул', 'Название', 'Тип', 'Дата создания', 'Дата обновления']];
+            $headers = [['Parse DateTime', 'ID', 'article', 'name', 'product_type', 'created_at', 'updated_at']];
             $rows = [];
 
             foreach ($products as $product) {
+                $currentDateTime = now()->format('Y-m-d H:i:s');
                 $rows[] = [
+                    $currentDateTime,
                     $product['id'] ?? '',
                     $product['article'] ?? '',
                     $product['name'] ?? '',

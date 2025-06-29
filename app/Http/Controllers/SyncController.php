@@ -65,11 +65,13 @@ class SyncController extends Controller
 
     protected function processProducts(array $products)
     {
-        $headers = [['ID', 'Артикул', 'Название', 'Тип', 'Дата создания', 'Дата обновления']];
+        $headers = [['Parse DateTime', 'ID', 'article', 'name', 'product_type', 'created_at', 'updated_at']];
         $rows = [];
 
         foreach ($products as $product) {
+            $currentDateTime = now()->format('Y-m-d H:i:s');
             $rows[] = [
+                $currentDateTime,
                 $product['id'] ?? '',
                 $product['article'] ?? '',
                 $product['name'] ?? '',
@@ -85,11 +87,13 @@ class SyncController extends Controller
 
     protected function processStocks(array $stocks)
     {
-        $headers = [['ID товара', 'ID компании', 'Склад ID', 'Доступно', 'Можно собрать']];
+        $headers = [['Parse DateTime','product_id', 'company_id', 'warehouse_id', 'free', 'can_collect']];
         $rows = [];
 
         foreach ($stocks as $stock) {
+            $currentDateTime = now()->format('Y-m-d H:i:s');
             $rows[] = [
+                $currentDateTime,
                 $stock['product_id'] ?? '',
                 $stock['company_id'] ?? '',
                 $stock['warehouse_id'] ?? '',
@@ -106,17 +110,20 @@ class SyncController extends Controller
     {
         $headers = [
             [
-                'ID приемки', 'Склад', 'Статус', 'Дата',
-                'Принято', 'Дата создания', 'Дата обновления',
-                'ID товара', 'Артикул', 'Название',
-                'Кол-во', 'Факт кол-во', 'ID позиции'
+                'Parse DateTime',
+                'arrival_id', 'to_warehouse_id', 'status', 'date',
+                'accepted_at', 'created_at', 'updated_at',
+                'product_id', 'article', 'product_name',
+                'quantity', 'fact_quantity', 'item_id'
             ]
         ];
 
         $rows = [];
 
         foreach ($arrivals as $arrival) {
+            $currentDateTime = now()->format('Y-m-d H:i:s');
             $rows[] = [
+                $currentDateTime,
                 $arrival['arrival_id'] ?? '',
                 $arrival['to_warehouse_id'] ?? '',
                 $arrival['status'] ?? '',
@@ -148,6 +155,58 @@ class SyncController extends Controller
         } catch (\Exception $e) {
             Log::warning("Failed to parse date: {$date}");
             return $date;
+        }
+    }
+
+    public function apiSyncProducts(Request $request)
+    {
+        try {
+            $products = $this->mpfitService->getAllProducts();
+            $this->processProducts($products);
+
+            return response()->json([
+                'message' => 'Обновлено товаров: ' . count($products),
+                'status' => 'success'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => $e->getMessage(),
+                'status' => 'error'
+            ], 500);
+        }
+    }
+
+    public function apiSyncStocks(Request $request){
+        try {
+            $stocks = $this->mpfitService->getAllStocks();
+            $this->processStocks($stocks);
+
+            return response()->json([
+                'message' => 'Обновлено остатков: ' . count($stocks),
+                'status' => 'success'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => $e->getMessage(),
+                'status' => 'error'
+            ], 500);
+        }
+    }
+
+    public function apiSyncArrivals(Request $request){
+        try {
+            $arrivals = $this->mpfitService->getArrivals();
+            $this->processStocks($arrivals);
+
+            return response()->json([
+                'message' => 'Обновлено: ' . count($arrivals),
+                'status' => 'success'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => $e->getMessage(),
+                'status' => 'error'
+            ], 500);
         }
     }
 }
